@@ -1,3 +1,10 @@
+
+The aim of this project is to develop an interactive test application that allows users to receive instant feedback by answering multiple-choice questions and calculates their score. Questions are managed via data.js, separated from the interface, with a state-based flow established using React. Correct/incorrect checks are performed for each selection, and the results are displayed on the screen. At the end of the test, the total score is shown; the user can start a new attempt by clicking ‘Reset’.
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
