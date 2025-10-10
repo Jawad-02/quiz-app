@@ -1,6 +1,8 @@
 
 The aim of this project is to develop an interactive test application that allows users to receive instant feedback by answering multiple-choice questions and calculates their score. Questions are managed via data.js, separated from the interface, with a state-based flow established using React. Correct/incorrect checks are performed for each selection, and the results are displayed on the screen. At the end of the test, the total score is shown; the user can start a new attempt by clicking ‘Reset’.
 
+In my Quiz App project, I first defined the questions and answer choices in JSON format in the data.js file. Then, I created the Quiz.jsx file and added states that manage the active question, score, and whether the test is complete using the useState hook. I wrote the handleAnswer function, which performs a correct-incorrect check and moves to the next question each time the user selects an answer choice. Finally, I called the Quiz component in the App.jsx file to display the application on the screen. This way, I developed a quiz application that works dynamically and shows the user their results.
+
 
 
 
