@@ -189,8 +189,11 @@ export async function fromOpenTdb({ category, difficulty, amount }) {
   return questions
 }
 
-export async function fromLlm({ category, difficulty, amount }) {
-  const data = await fetchJson('/api/generate', { body: { category, difficulty, amount }, timeout: 25000 })
+export async function fromLlm({ category, difficulty, amount, language = 'en' }) {
+  const data = await fetchJson('/api/generate', {
+    body: { category, difficulty, amount, language },
+    timeout: 25000,
+  })
   const questions = (Array.isArray(data.questions) ? data.questions : [])
     .map((item) =>
       normalizeQuestion(
@@ -222,15 +225,29 @@ export async function probeLlm() {
   }
 }
 
+export async function fromTurkishBank({ category, difficulty, amount }) {
+  const { turkishQuestions } = await import('./turkishBank')
+  const questions = turkishQuestions({ category, difficulty, amount })
+  if (questions.length < Math.min(3, amount)) throw new Error('turkish bank too thin')
+  return questions
+}
+
 const PROVIDERS = {
   'trivia-api': fromTriviaApi,
   opentdb: fromOpenTdb,
+  'tr-bank': fromTurkishBank,
   ai: fromLlm,
 }
 
 // Tries each source in order and reports which one answered, so the UI can be honest
 // about where the questions came from. The cache is only a rescue path, never a first
 // choice, so a new round always asks the live sources first.
+// The English APIs cannot answer in Turkish, so a Turkish round is played from the
+// bundled Turkish bank (or the AI source when it is switched on), never from English text.
+function defaultOrder(language) {
+  return language === 'tr' ? ['tr-bank', 'local'] : ['trivia-api', 'opentdb', 'local']
+}
+
 export async function fetchQuestions({
   category = 'any',
   difficulty = 'any',
@@ -239,7 +256,7 @@ export async function fetchQuestions({
   order,
 } = {}) {
   const key = `${category}:${difficulty}:${amount}`
-  const attempts = order?.length ? order : ['trivia-api', 'opentdb', 'local']
+  const attempts = order?.length ? order : defaultOrder(language)
   const cached = readCache(key)
   const failures = []
 
@@ -252,7 +269,7 @@ export async function fetchQuestions({
       } else {
         const provider = PROVIDERS[name]
         if (!provider) throw new Error(`unknown provider ${name}`)
-        questions = await provider({ category, difficulty, amount })
+        questions = await provider({ category, difficulty, amount, language })
       }
       if (!questions.length) throw new Error('empty result')
       writeCache(key, questions)

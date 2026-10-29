@@ -107,7 +107,7 @@ describe('QuizApp flow', () => {
 })
 
 describe('language switching', () => {
-  it('renders Turkish after pressing TR and keeps it for the round', async () => {
+  it('renders Turkish after pressing TR and remembers the choice', async () => {
     const user = userEvent.setup()
     renderApp()
 
@@ -117,22 +117,34 @@ describe('language switching', () => {
     expect(screen.getByText('Konu')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Başla/ })).toBeInTheDocument()
     expect(document.documentElement.lang).toBe('tr')
+    expect(localStorage.getItem('quiz:lang')).toBe('tr')
+  })
 
+  it('plays a Turkish round from the Turkish bank and never asks the English APIs', async () => {
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'TR' }))
     await user.click(screen.getByRole('button', { name: /Başla/ }))
-    await screen.findByText('Capital city of France?')
 
-    expect(screen.getByText('Soru 1 / 3')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /Berlin/ }))
-    expect(await screen.findByText(/Olmadı\./)).toBeInTheDocument()
+    const question = await screen.findByRole('heading', { level: 2 })
+    expect(question.textContent).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
+    expect(screen.getByText(/Türkçe soru bankası/i)).toBeInTheDocument()
+    expect(screen.getByText(/Soru 1 \/ 10/)).toBeInTheDocument()
+
+    const urls = globalThis.fetch.mock.calls.map(([url]) => String(url))
+    expect(urls.some((url) => url.includes('the-trivia-api'))).toBe(false)
+    expect(urls.some((url) => url.includes('opentdb'))).toBe(false)
+
+    await user.click(screen.getAllByRole('button')[0])
     expect(await screen.findByRole('button', { name: /Sonraki soru/ })).toBeInTheDocument()
   })
 
-  it('remembers the choice for the next visit', async () => {
+  it('keeps the Turkish choice for the next visit', async () => {
     const user = userEvent.setup()
     const first = renderApp()
 
     await user.click(screen.getByRole('button', { name: 'TR' }))
-    expect(localStorage.getItem('quiz:lang')).toBe('tr')
     first.unmount()
 
     renderApp()

@@ -29,13 +29,18 @@ the choice is stored in `localStorage` under `quiz:lang`, and the first visit fo
 `navigator.language` (anything starting with `tr` gets Turkish). `<html lang>` follows the choice too,
 so screen readers and hyphenation do the right thing.
 
-Question text comes from the public APIs, which only serve English. The bundled offline pack is
-translated, so a Turkish player who lands with no network still reads Turkish questions.
+Question text: the public APIs either do not serve Turkish or require a paid key, so a Turkish round
+is played from the bundled Turkish question bank (`src/lib/turkishBank.js`, 94 questions, every
+topic with at least 10 so a full round fits the selected topic), each with difficulty and verified
+answers. The English round keeps using the live APIs. In
+Turkish mode the app never calls the English endpoints, so an English question cannot leak into a
+Turkish round. If you switch AI mode on, the model is asked for Turkish questions directly.
+
+The offline pack is translated too, so a Turkish player with no network still reads Turkish.
 
 Adding a language is one file: copy the `en` object in `src/i18n/translations.js`, translate the
 values, add it to the `translations` map and to `LOCALES`. The unit tests fail if the key sets drift
-apart, so a half finished translation cannot ship quietly. Turkish offline questions live in
-`src/lib/fallbackTr.js`, keyed by the English pack id.
+apart, so a half finished translation cannot ship quietly.
 
 ## Run it
 

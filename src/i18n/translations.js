@@ -104,6 +104,7 @@ const en = {
   source: {
     'trivia-api': 'Live trivia',
     opentdb: 'Open Trivia DB',
+    'tr-bank': 'Turkish pack',
     ai: 'AI generated',
     cached: 'Cached set',
     local: 'Offline pack',
@@ -214,6 +215,7 @@ const tr = {
   source: {
     'trivia-api': 'Canlı sorular',
     opentdb: 'Open Trivia DB',
+    'tr-bank': 'Türkçe soru bankası',
     ai: 'Yapay zeka',
     cached: 'Önbellekteki set',
     local: 'Çevrimdışı paket',

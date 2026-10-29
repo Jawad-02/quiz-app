@@ -65,9 +65,8 @@ export default function QuizApp() {
     setError(null)
     setScreen('loading')
 
-    const order = cfg.ai
-      ? ['ai', 'trivia-api', 'opentdb', 'local']
-      : ['trivia-api', 'opentdb', 'local']
+    const baseOrder = language === 'tr' ? ['tr-bank', 'local'] : ['trivia-api', 'opentdb', 'local']
+    const order = cfg.ai ? ['ai', ...baseOrder] : baseOrder
 
     try {
       const result = await fetchQuestions({

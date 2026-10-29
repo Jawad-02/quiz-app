@@ -53,6 +53,7 @@ function llmProxyPlugin(env) {
       const amount = Math.min(Math.max(Number(body.amount) || 10, 3), 20)
       const category = typeof body.category === 'string' && body.category !== 'any' ? body.category : 'general'
       const difficulty = typeof body.difficulty === 'string' && body.difficulty !== 'any' ? body.difficulty : 'mixed'
+      const useTurkish = body.language === 'tr'
 
       const upstream = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
@@ -69,6 +70,7 @@ function llmProxyPlugin(env) {
             {
               role: 'user',
               content: `Write ${amount} questions about ${category} at ${difficulty} difficulty.
+${useTurkish ? 'Write the questions, the correct answer and every incorrect answer in Turkish.' : 'Write the questions and answers in English.'}
 Avoid the most obvious textbook questions, prefer interesting facts.`,
             },
           ],
