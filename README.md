@@ -22,6 +22,21 @@ rebuilds the UI, the question pipeline and the test coverage around it.
 - Keyboard play: `1` to `4` to answer, `Enter` to continue. Visible focus rings, no keyboard trap.
 - Reduced motion is respected, the animated background and confetti switch off automatically.
 
+## Languages
+
+The interface ships in English and Turkish. The switch sits in the top right of the start screen,
+the choice is stored in `localStorage` under `quiz:lang`, and the first visit follows
+`navigator.language` (anything starting with `tr` gets Turkish). `<html lang>` follows the choice too,
+so screen readers and hyphenation do the right thing.
+
+Question text comes from the public APIs, which only serve English. The bundled offline pack is
+translated, so a Turkish player who lands with no network still reads Turkish questions.
+
+Adding a language is one file: copy the `en` object in `src/i18n/translations.js`, translate the
+values, add it to the `translations` map and to `LOCALES`. The unit tests fail if the key sets drift
+apart, so a half finished translation cannot ship quietly. Turkish offline questions live in
+`src/lib/fallbackTr.js`, keyed by the English pack id.
+
 ## Run it
 
 ```bash

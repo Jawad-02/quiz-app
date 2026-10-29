@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import QuizApp from './QuizApp'
+import { LanguageProvider } from '../i18n/LanguageProvider'
 
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }))
 
@@ -32,6 +33,13 @@ const QUESTIONS = [
   },
 ]
 
+const renderApp = () =>
+  render(
+    <LanguageProvider>
+      <QuizApp />
+    </LanguageProvider>,
+  )
+
 beforeEach(() => {
   sessionStorage.clear()
   localStorage.clear()
@@ -53,7 +61,7 @@ beforeEach(() => {
 describe('QuizApp flow', () => {
   it('loads live questions, locks the answer, advances and reports a score', async () => {
     const user = userEvent.setup()
-    render(<QuizApp />)
+    renderApp()
 
     expect(screen.getByRole('heading', { name: /Quiz Arcade/i })).toBeInTheDocument()
 
@@ -79,13 +87,13 @@ describe('QuizApp flow', () => {
       )
     }
 
-    expect(await screen.findByText(/3 of 3/)).toBeInTheDocument()
+    expect(await screen.findByText(/3 \/ 3/)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Flawless run/i })).toBeInTheDocument()
   })
 
   it('marks a wrong pick and reveals the right answer', async () => {
     const user = userEvent.setup()
-    const { container } = render(<QuizApp />)
+    const { container } = renderApp()
 
     await user.click(screen.getByRole('button', { name: /Start quiz/i }))
     await screen.findByText('Capital city of France?')
@@ -95,5 +103,39 @@ describe('QuizApp flow', () => {
     expect(await screen.findByText(/Not quite\./)).toBeInTheDocument()
     expect(container.querySelector('.option.is-correct')).toHaveTextContent('Paris')
     expect(container.querySelector('.option.is-wrong')).toHaveTextContent('Berlin')
+  })
+})
+
+describe('language switching', () => {
+  it('renders Turkish after pressing TR and keeps it for the round', async () => {
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'TR' }))
+
+    expect(screen.getByText('Her turda yeni sorular')).toBeInTheDocument()
+    expect(screen.getByText('Konu')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Başla/ })).toBeInTheDocument()
+    expect(document.documentElement.lang).toBe('tr')
+
+    await user.click(screen.getByRole('button', { name: /Başla/ }))
+    await screen.findByText('Capital city of France?')
+
+    expect(screen.getByText('Soru 1 / 3')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Berlin/ }))
+    expect(await screen.findByText(/Olmadı\./)).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Sonraki soru/ })).toBeInTheDocument()
+  })
+
+  it('remembers the choice for the next visit', async () => {
+    const user = userEvent.setup()
+    const first = renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'TR' }))
+    expect(localStorage.getItem('quiz:lang')).toBe('tr')
+    first.unmount()
+
+    renderApp()
+    expect(screen.getByText('Her turda yeni sorular')).toBeInTheDocument()
   })
 })

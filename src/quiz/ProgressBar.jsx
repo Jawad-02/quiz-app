@@ -1,4 +1,4 @@
-export default function ProgressBar({ value, label }) {
+export default function ProgressBar({ value, label, ariaLabel }) {
   const pct = Math.max(0, Math.min(1, value)) * 100
   return (
     <div className="progress">
@@ -12,7 +12,7 @@ export default function ProgressBar({ value, label }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(pct)}
-        aria-label="Quiz progress"
+        aria-label={ariaLabel || 'Quiz progress'}
       >
         <div className="progress__fill" style={{ width: `${pct}%` }} />
       </div>

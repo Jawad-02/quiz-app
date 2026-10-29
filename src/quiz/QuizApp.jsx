@@ -7,6 +7,7 @@ import QuestionCard from './QuestionCard'
 import ResultScreen from './ResultScreen'
 import { fetchQuestions, probeLlm } from '../lib/trivia'
 import { readBest, saveResult } from '../lib/storage'
+import { useI18n } from '../i18n/useI18n'
 import './quiz.css'
 
 export const SECONDS_PER_QUESTION = 20
@@ -30,6 +31,7 @@ const CONFETTI = {
 }
 
 export default function QuizApp() {
+  const { t, language } = useI18n()
   const prefersReduced = useReducedMotion()
   const [screen, setScreen] = useState('start')
   const [config, setConfig] = useState(DEFAULT_CONFIG)
@@ -72,6 +74,7 @@ export default function QuizApp() {
         category: cfg.category,
         difficulty: cfg.difficulty,
         amount: cfg.amount,
+        language,
         order,
       })
       if (id !== requestId.current) return
@@ -88,7 +91,7 @@ export default function QuizApp() {
       setError(err.message)
       setScreen('start')
     }
-  }, [config])
+  }, [config, language])
 
   const finishRound = useCallback(
     (finalAnswers) => {
@@ -182,8 +185,8 @@ export default function QuizApp() {
               <span />
               <span />
             </div>
-            <p className="loading__text">Dealing a fresh set of questions</p>
-            <p className="loading__sub">Live trivia, no two rounds the same</p>
+            <p className="loading__text">{t('loading.title')}</p>
+            <p className="loading__sub">{t('loading.sub')}</p>
           </motion.div>
         )}
 

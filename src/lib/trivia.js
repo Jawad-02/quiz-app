@@ -8,23 +8,23 @@ const CACHE_TTL = 5 * 60 * 1000
 const CACHE_PREFIX = 'quiz:cache:'
 
 export const CATEGORIES = [
-  { id: 'any', label: 'Any topic', api: null, opentdb: null },
-  { id: 'general_knowledge', label: 'General', api: 'general_knowledge', opentdb: 9 },
-  { id: 'science', label: 'Science', api: 'science', opentdb: 17 },
-  { id: 'history', label: 'History', api: 'history', opentdb: 23 },
-  { id: 'geography', label: 'Geography', api: 'geography', opentdb: 22 },
-  { id: 'arts_and_literature', label: 'Arts', api: 'arts_and_literature', opentdb: 25 },
-  { id: 'film_and_tv', label: 'Film & TV', api: 'film_and_tv', opentdb: 11 },
-  { id: 'music', label: 'Music', api: 'music', opentdb: 12 },
-  { id: 'sport_and_leisure', label: 'Sport', api: 'sport_and_leisure', opentdb: 21 },
-  { id: 'food_and_drink', label: 'Food', api: 'food_and_drink', opentdb: null },
+  { id: 'any', api: null, opentdb: null },
+  { id: 'general_knowledge', api: 'general_knowledge', opentdb: 9 },
+  { id: 'science', api: 'science', opentdb: 17 },
+  { id: 'history', api: 'history', opentdb: 23 },
+  { id: 'geography', api: 'geography', opentdb: 22 },
+  { id: 'arts_and_literature', api: 'arts_and_literature', opentdb: 25 },
+  { id: 'film_and_tv', api: 'film_and_tv', opentdb: 11 },
+  { id: 'music', api: 'music', opentdb: 12 },
+  { id: 'sport_and_leisure', api: 'sport_and_leisure', opentdb: 21 },
+  { id: 'food_and_drink', api: 'food_and_drink', opentdb: null },
 ]
 
 export const DIFFICULTIES = [
-  { id: 'any', label: 'Mixed' },
-  { id: 'easy', label: 'Easy' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'hard', label: 'Hard' },
+  { id: 'any' },
+  { id: 'easy' },
+  { id: 'medium' },
+  { id: 'hard' },
 ]
 
 export const QUESTION_COUNTS = [5, 10, 15]
@@ -231,7 +231,13 @@ const PROVIDERS = {
 // Tries each source in order and reports which one answered, so the UI can be honest
 // about where the questions came from. The cache is only a rescue path, never a first
 // choice, so a new round always asks the live sources first.
-export async function fetchQuestions({ category = 'any', difficulty = 'any', amount = 10, order } = {}) {
+export async function fetchQuestions({
+  category = 'any',
+  difficulty = 'any',
+  amount = 10,
+  language = 'en',
+  order,
+} = {}) {
   const key = `${category}:${difficulty}:${amount}`
   const attempts = order?.length ? order : ['trivia-api', 'opentdb', 'local']
   const cached = readCache(key)
@@ -242,7 +248,7 @@ export async function fetchQuestions({ category = 'any', difficulty = 'any', amo
       let questions
       if (name === 'local') {
         const { fallbackQuestions } = await import('./fallbackQuestions')
-        questions = fallbackQuestions({ category, difficulty, amount })
+        questions = fallbackQuestions({ category, difficulty, amount, language })
       } else {
         const provider = PROVIDERS[name]
         if (!provider) throw new Error(`unknown provider ${name}`)
@@ -258,12 +264,4 @@ export async function fetchQuestions({ category = 'any', difficulty = 'any', amo
 
   if (cached) return { questions: cached.questions.slice(0, amount), source: 'cached', notes: failures }
   throw new Error(`every question source failed (${failures.join('; ')})`)
-}
-
-export const SOURCE_LABELS = {
-  'trivia-api': 'Live trivia',
-  opentdb: 'Open Trivia DB',
-  ai: 'AI generated',
-  cached: 'Cached set',
-  local: 'Offline pack',
 }

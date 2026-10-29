@@ -1,10 +1,7 @@
 import { motion } from 'motion/react'
-import {
-  ArrowRightIcon,
-  BoltIcon,
-  SparkIcon,
-  TrophyIcon,
-} from './Icons'
+import { ArrowRightIcon, BoltIcon, SparkIcon, TrophyIcon } from './Icons'
+import LanguageSwitch from '../i18n/LanguageSwitch'
+import { useI18n } from '../i18n/useI18n'
 import { CATEGORIES, DIFFICULTIES, QUESTION_COUNTS } from '../lib/trivia'
 
 function Chip({ active, children, ...rest }) {
@@ -16,6 +13,7 @@ function Chip({ active, children, ...rest }) {
 }
 
 export default function StartScreen({ config, onChange, onStart, loading, llm, best, error }) {
+  const { t } = useI18n()
   const set = (patch) => onChange({ ...config, ...patch })
   const aiLocked = !llm.available
 
@@ -24,24 +22,24 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
       className="card start"
       initial={{ opacity: 0, y: 26, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -18, scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 220, damping: 26 }}
       aria-labelledby="start-title"
     >
-      <span className="badge">
-        <SparkIcon width={15} height={15} /> Fresh questions every round
-      </span>
+      <div className="start__top">
+        <span className="badge">
+          <SparkIcon width={15} height={15} /> {t('start.badge')}
+        </span>
+        <LanguageSwitch />
+      </div>
 
       <h1 id="start-title" className="start__title">
-        Quiz <span className="grad">Arcade</span>
+        {t('app.name')} <span className="grad">{t('app.accent')}</span>
       </h1>
-      <p className="start__lede">
-        Live trivia, instant feedback and streaks worth chasing. Pick a lane, beat the clock.
-      </p>
+      <p className="start__lede">{t('app.tagline')}</p>
 
       <div className="field">
         <div className="field__label" id="topic-label">
-          Topic
+          {t('start.topic')}
         </div>
         <div className="chips" role="group" aria-labelledby="topic-label">
           {CATEGORIES.map((category) => (
@@ -50,7 +48,7 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
               active={config.category === category.id}
               onClick={() => set({ category: category.id })}
             >
-              {category.label}
+              {t(`topic.${category.id}`)}
             </Chip>
           ))}
         </div>
@@ -59,7 +57,7 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
       <div className="field-row">
         <div className="field">
           <div className="field__label" id="difficulty-label">
-            Difficulty
+            {t('start.difficulty')}
           </div>
           <div className="segmented" role="group" aria-labelledby="difficulty-label">
             {DIFFICULTIES.map((difficulty) => (
@@ -68,7 +66,7 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
                 active={config.difficulty === difficulty.id}
                 onClick={() => set({ difficulty: difficulty.id })}
               >
-                {difficulty.label}
+                {t(`difficulty.${difficulty.id}`)}
               </Chip>
             ))}
           </div>
@@ -76,7 +74,7 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
 
         <div className="field">
           <div className="field__label" id="count-label">
-            Questions
+            {t('start.count')}
           </div>
           <div className="segmented" role="group" aria-labelledby="count-label">
             {QUESTION_COUNTS.map((count) => (
@@ -100,16 +98,12 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
             onChange={(event) => set({ timed: event.target.checked })}
           />
           <span className="switch__ui" aria-hidden="true" />
-          <span className="switch__label">20s timer</span>
+          <span className="switch__label">{t('start.timer')}</span>
         </label>
 
         <label
           className={`switch${aiLocked ? ' is-locked' : ''}`}
-          title={
-            aiLocked
-              ? 'Add OPENAI_API_KEY to your .env file, restart the dev server, then reload'
-              : `AI questions via ${llm.model || 'your model'}`
-          }
+          title={aiLocked ? t('start.aiLocked') : t('start.aiReady', { model: llm.model || 'AI' })}
         >
           <input
             type="checkbox"
@@ -119,38 +113,32 @@ export default function StartScreen({ config, onChange, onStart, loading, llm, b
           />
           <span className="switch__ui" aria-hidden="true" />
           <span className="switch__label">
-            <BoltIcon width={15} height={15} /> AI questions
-            {aiLocked && <span className="switch__hint">add API key</span>}
+            <BoltIcon width={15} height={15} /> {t('start.ai')}
+            {aiLocked && <span className="switch__hint">{t('start.aiHint')}</span>}
           </span>
         </label>
       </div>
 
       {error && (
         <p className="alert" role="alert">
-          Could not reach the question services ({error}). The offline pack was used instead.
+          {t('start.error', { error })}
         </p>
       )}
-      {!error && config.ai && llm.available && (
-        <p className="note">
-          AI mode is on. If the model call fails, live trivia takes over so the round always starts.
-        </p>
-      )}
+      {!error && config.ai && llm.available && <p className="note">{t('start.aiNote')}</p>}
 
       {best && (
         <p className="start__best">
-          <TrophyIcon width={16} height={16} /> Personal best {best.pct}% ({best.score}/{best.total})
+          <TrophyIcon width={16} height={16} />
+          {t('start.best', { pct: best.pct, score: best.score, total: best.total })}
         </p>
       )}
 
       <button className="btn btn--xl" onClick={() => onStart(config)} disabled={loading}>
-        {loading ? 'Dealing questions' : 'Start quiz'}
+        {loading ? t('loading.title') : t('start.start')}
         <ArrowRightIcon />
       </button>
 
-      <p className="start__foot">
-        Questions from The Trivia API and Open Trivia DB. Keyboard: press 1 to 4 to answer, Enter to
-        continue.
-      </p>
+      <p className="start__foot">{t('start.foot')}</p>
     </motion.section>
   )
 }

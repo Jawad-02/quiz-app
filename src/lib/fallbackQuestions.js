@@ -1,4 +1,5 @@
 import { shuffle } from './trivia'
+import { fallbackTr } from './fallbackTr'
 
 // Bundled pack, used when both public APIs are unreachable and nothing is cached.
 // Kept deliberately small but accurate. correctIndex is 0 based after shuffling.
@@ -160,7 +161,12 @@ const CATEGORY_MATCH = {
   food_and_drink: ['food'],
 }
 
-export function fallbackQuestions({ category = 'any', difficulty = 'any', amount = 10 } = {}) {
+export function fallbackQuestions({
+  category = 'any',
+  difficulty = 'any',
+  amount = 10,
+  language = 'en',
+} = {}) {
   const wanted = CATEGORY_MATCH[category]
   let pool = PACK.filter((q) => (wanted ? wanted.includes(q.category) : true))
   if (difficulty !== 'any') {
@@ -172,9 +178,12 @@ export function fallbackQuestions({ category = 'any', difficulty = 'any', amount
   return shuffle(pool)
     .slice(0, Math.max(3, Math.min(amount, pool.length)))
     .map((q) => {
-      const options = shuffle(q.answers.map((text, i) => ({ text, correct: i === q.correctIndex })))
+      const localized = language === 'tr' ? fallbackTr[q.id] : null
+      const texts = localized ? localized.answers : q.answers
+      const options = shuffle(texts.map((text, i) => ({ text, correct: i === q.correctIndex })))
       return {
         ...q,
+        question: localized ? localized.question : q.question,
         answers: options.map((o) => o.text),
         correctIndex: options.findIndex((o) => o.correct),
         source: 'local',

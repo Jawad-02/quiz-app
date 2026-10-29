@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import ProgressBar from './ProgressBar'
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  CrossIcon,
-  FlameIcon,
-  TimerIcon,
-  TrophyIcon,
-} from './Icons'
+import { ArrowRightIcon, CheckIcon, CrossIcon, FlameIcon, TimerIcon, TrophyIcon } from './Icons'
+import { categoryLabel, difficultyLabel } from '../i18n/labels'
+import { useI18n } from '../i18n/useI18n'
 
 const LETTERS = ['A', 'B', 'C', 'D']
 const RADIUS = 15
@@ -34,6 +29,7 @@ export default function QuestionCard({
   streak,
   source,
 }) {
+  const { t } = useI18n()
   const prefersReduced = useReducedMotion()
   const answered = Boolean(answer)
   const isLast = index === total - 1
@@ -88,34 +84,34 @@ export default function QuestionCard({
   const urgent = timed && !answered && timeLeft <= 0.3
   const feedbackTone = !answer ? '' : answer.correct ? 'is-good' : 'is-bad'
   const correctText = question.answers[question.correctIndex]
+  const secondsLeft = Math.ceil(remaining / 1000)
 
   return (
     <motion.section
       className="card quiz"
       initial={{ opacity: 0, y: 24, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -18, scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 220, damping: 26 }}
       aria-labelledby="question-text"
     >
       <header className="quiz__head">
         <div className="quiz__pills">
-          <span className="pill">{question.category}</span>
-          <span className="pill pill--ghost">{question.difficulty}</span>
+          <span className="pill">{categoryLabel(question.category, t)}</span>
+          <span className="pill pill--ghost">{difficultyLabel(question.difficulty, t)}</span>
         </div>
 
         <div className="quiz__stats">
-          <span className="stat" title="Current streak">
+          <span className="stat" title={t('quiz.streak')}>
             <FlameIcon width={15} height={15} /> {streak}
           </span>
-          <span className="stat" title="Score">
+          <span className="stat" title={t('quiz.score')}>
             <TrophyIcon width={15} height={15} /> {score}
           </span>
           {timed && (
             <span
               className={`ring${urgent ? ' is-urgent' : ''}${answered ? ' is-done' : ''}`}
-              title={timed ? `${Math.ceil(remaining / 1000)} seconds left` : 'No timer'}
-              aria-label={timed ? `${Math.ceil(remaining / 1000)} seconds left` : 'No timer'}
+              title={t('quiz.secondsLeft', { n: secondsLeft })}
+              aria-label={t('quiz.secondsLeft', { n: secondsLeft })}
             >
               <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true">
                 <circle className="ring__track" cx="19" cy="19" r={RADIUS} />
@@ -128,13 +124,17 @@ export default function QuestionCard({
                   strokeDashoffset={CIRCUMFERENCE * (1 - timeLeft)}
                 />
               </svg>
-              <span className="ring__value">{Math.ceil(remaining / 1000)}</span>
+              <span className="ring__value">{secondsLeft}</span>
             </span>
           )}
         </div>
       </header>
 
-      <ProgressBar value={(index + 1) / total} label={`Question ${index + 1} of ${total}`} />
+      <ProgressBar
+        value={(index + 1) / total}
+        label={t('quiz.progress', { current: index + 1, total })}
+        ariaLabel={t('quiz.progressBar')}
+      />
 
       <h2 id="question-text" className="quiz__question">
         {question.question}
@@ -167,8 +167,10 @@ export default function QuestionCard({
                 {stateClass === 'is-correct' && <CheckIcon />}
                 {stateClass === 'is-wrong' && <CrossIcon />}
               </span>
-              {stateClass === 'is-correct' && <span className="sr-only">Correct answer</span>}
-              {stateClass === 'is-wrong' && <span className="sr-only">Your answer, incorrect</span>}
+              {stateClass === 'is-correct' && (
+                <span className="sr-only">{t('quiz.correctAnswer')}</span>
+              )}
+              {stateClass === 'is-wrong' && <span className="sr-only">{t('quiz.yourWrong')}</span>}
             </motion.button>
           )
         })}
@@ -177,30 +179,30 @@ export default function QuestionCard({
       <div className={`feedback ${feedbackTone}`} aria-live="polite">
         {!answer && (
           <span className="feedback__idle">
-            <TimerIcon width={15} height={15} /> Pick an answer, or press 1 to 4
+            <TimerIcon width={15} height={15} /> {t('quiz.pick')}
           </span>
         )}
         {answer && answer.correct && (
           <span>
-            <CheckIcon width={16} height={16} /> <strong>Correct.</strong> Streak is alive.
+            <CheckIcon width={16} height={16} /> {t('quiz.correct')}
           </span>
         )}
         {answer && answer.timedOut && (
           <span>
-            <CrossIcon width={16} height={16} /> Time is up. Answer: <strong>{correctText}</strong>
+            <CrossIcon width={16} height={16} /> {t('quiz.timeout', { answer: correctText })}
           </span>
         )}
         {answer && !answer.correct && !answer.timedOut && (
           <span>
-            <CrossIcon width={16} height={16} /> Not quite. Answer: <strong>{correctText}</strong>
+            <CrossIcon width={16} height={16} /> {t('quiz.wrong', { answer: correctText })}
           </span>
         )}
       </div>
 
       <footer className="quiz__foot">
-        <span className="source-tag">{source === 'ai' ? 'AI generated' : 'Live set'}</span>
+        <span className="source-tag">{t(`source.${source}`, null, source)}</span>
         <button className="btn" onClick={onNext} disabled={!answered}>
-          {answered ? (isLast ? 'See results' : 'Next question') : 'Pick an answer'}
+          {answered ? (isLast ? t('quiz.results') : t('quiz.next')) : t('quiz.pickButton')}
           <ArrowRightIcon />
         </button>
       </footer>
