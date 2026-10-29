@@ -1,10 +1,5 @@
-import React from 'react'
-import Quiz from './Companend/Quiz/Quiz'
+import QuizApp from './quiz/QuizApp'
 
-function App() {
-  return (
-      <Quiz/>
-  )
+export default function App() {
+  return <QuizApp />
 }
-
-export default App
