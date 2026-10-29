@@ -23,6 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# local question proxy key
+# local env and secrets
 .env
-.env.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# tooling output
+coverage
+.vite

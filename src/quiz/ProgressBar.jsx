@@ -12,7 +12,7 @@ export default function ProgressBar({ value, label, ariaLabel }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(pct)}
-        aria-label={ariaLabel || 'Quiz progress'}
+        aria-label={ariaLabel}
       >
         <div className="progress__fill" style={{ width: `${pct}%` }} />
       </div>

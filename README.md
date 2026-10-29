@@ -7,6 +7,23 @@ the clock keeps you moving, and the results screen shows exactly what you got ri
 Original project by [ecankrtm](https://github.com/ecankrtm/quiz-app). This version keeps the idea and
 rebuilds the UI, the question pipeline and the test coverage around it.
 
+## What this version changes
+
+- Rebuilt interface: dark glass card, animated aurora backdrop, staggered option motion, shake on a
+  wrong pick, animated score ring and a confetti finish. Two runtime dependencies were added for
+  that, `motion` and `canvas-confetti`.
+- Questions are no longer a hardcoded array. Each round is normalised from a live source, with
+  fallbacks, and the UI reports which source answered.
+- New round features: topic and difficulty picker, question count, 20 second timer, streak counter,
+  personal best, and a full review of every question at the end.
+- Accessibility pass: options are real buttons, feedback goes through `aria-live`, every state has an
+  icon and screen reader text, focus rings are visible, reduced motion is respected.
+- English and Turkish interface, with a Turkish question bank so Turkish rounds are not English.
+- The old `data.js` / `Quiz.jsx` pair is replaced by `src/lib/trivia.js` (providers and
+  normalising) and `src/quiz/` (screens). The `Companend` folder typo is gone.
+- Test setup added: 32 tests over the question pipeline, the Turkish bank, the translation
+  dictionary and the round flow.
+
 ## What it does
 
 - Ten questions by default, in a topic and difficulty you pick (Any topic, Science, History,
@@ -44,6 +61,8 @@ apart, so a half finished translation cannot ship quietly.
 
 ## Run it
 
+Requires Node 20.19 or newer (Vite 7 needs it). Node 22 LTS is the safe choice.
+
 ```bash
 npm install
 npm run dev
@@ -74,6 +93,43 @@ For a static production build there is no middleware, so the AI switch stays off
 public APIs only. Deploy it behind a server or a serverless function if you want AI questions in
 production.
 
+## How a round is loaded
+
+English rounds try, in order: The Trivia API, then Open Trivia DB, then the bundled offline pack. If
+every source fails, the last cached round in `sessionStorage` is reused and the UI says so. The cache
+is a rescue path only, so pressing "New questions" always asks the live sources first.
+
+Turkish rounds skip the English endpoints entirely and go: AI (only when the switch is on), then the
+Turkish bank, then the translated offline pack.
+
+## Testing
+
+```bash
+npm test
+```
+
+32 tests with Vitest and Testing Library:
+
+- question normalising, HTML entity decoding, shuffling and malformed record rejection
+- every source in the provider chain, including the cache rescue path
+- Turkish bank integrity: unique ids, four distinct answers, valid correct index, a full 10 question
+  round per topic, no em dashes
+- translation dictionary parity, interpolation and language detection
+- two full round flows in English, plus a Turkish round that asserts no English API call happens
+
+## Deployment
+
+`npm run build` emits a static site in `dist/`. Any static host works (Netlify, Vercel, Cloudflare
+Pages, GitHub Pages), and because the Turkish bank and offline pack are bundled, the app also starts
+with no network. The AI proxy exists only in the Vite dev and preview servers, so on a plain static
+host the AI switch stays hidden. Put `dist/` behind a small server if you want AI questions live.
+
+## Privacy
+
+No accounts, no analytics, no tracking pixels, no cookies. The personal best and language choice stay
+in the browser's `localStorage`. The only network calls are the question APIs, and the AI endpoint
+only when you switch it on and have set a key.
+
 ## Scripts
 
 | Command | What it does |
@@ -96,11 +152,22 @@ src/
     ResultScreen.jsx  score ring, stats, review list
     ProgressBar.jsx
     Background.jsx    animated aurora backdrop
+    Icons.jsx         inline SVG icon set
     quiz.css          component styles
+  i18n/
+    translations.js   en and tr dictionaries, t() and detection helpers
+    LanguageProvider.jsx  context, persistence, html lang
+    LanguageSwitch.jsx    EN / TR control
+    labels.js         maps API categories and difficulties to translated labels
+    useI18n.js
   lib/
-    trivia.js         question providers, normalising, shuffling, caching
-    fallbackQuestions.js
+    trivia.js         question providers, normalising, shuffling, cache
+    fallbackQuestions.js  bundled English pack
+    fallbackTr.js     Turkish version of the bundled pack
+    turkishBank.js    94 verified Turkish questions, all topics
     storage.js        personal best and history
+    *.test.js         unit tests
+  test/setup.js       Testing Library cleanup and reduced motion for tests
   index.css           tokens, reset, backdrop
 vite.config.js        React plugin, LLM proxy, Vitest config
 ```
@@ -127,11 +194,13 @@ in the same slot.
 ## Notes on the public APIs
 
 - The Trivia API is the primary source. It returns `question.text`, `correctAnswer` and
-  `incorrectAnswers`.
+  `incorrectAnswers`. Its Turkish translations exist but need a paid key, which is why Turkish rounds
+  do not call it.
 - Open Trivia DB is the backup. It returns HTML entities and URL encoded text, both are decoded in
   `src/lib/trivia.js`.
-- Both APIs rate limit. A round is cached in `sessionStorage` for five minutes, so a page refresh does
-  not hammer them, and failures fall through to the next source instead of breaking the screen.
+- Both APIs rate limit. A round is cached in `sessionStorage` for five minutes and is only used when
+  every live source fails, so a refresh still gets fresh questions but a failing network does not
+  break the screen.
 
 ## License
 

@@ -177,7 +177,6 @@ export default function QuizApp() {
             className="card loading"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
           >
             <div className="loading__orb" aria-hidden="true">
               <span />
